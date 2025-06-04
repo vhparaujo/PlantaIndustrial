@@ -259,9 +259,8 @@ void save_sensor_data(SensorData *sensor)
     // Escrever dados ordenados no arquivo
     for (int i = 0; i < sensor->count; i++)
     {
-        fprintf(file, "%ld %s %s\n",
+        fprintf(file, "%ld %s\n",
                 sensor->leituras[i].timestamp,
-                sensor->leituras[i].sensor_id,
                 sensor->leituras[i].valor);
     }
 
@@ -359,9 +358,9 @@ int main(int argc, char *argv[])
                 espacos++;
         }
 
-        if (espacos < 2)
+        if (espacos != 2)
         {
-            printf("Aviso: Linha %d com separadores inválidos (menos de dois espaços): '%s'\n", line_number, line_ptr);
+            printf("Aviso: Linha %d com separadores inválidos: '%s'\n", line_number, line_ptr);
             continue;
         }
 
