@@ -26,6 +26,7 @@ DerivedData/
 *.perspectivev3
 !default.perspectivev3
 .DS_Store
+.exe
 
 
 ## Obj-C/Swift specific
