@@ -71,7 +71,7 @@ int is_valid_int(const char *str)
 
 int is_valid_bool(const char *str)
 {
-    return (strcmp(str, "0") == 0 || strcmp(str, "1") == 0);
+    return (strcmp(str, "true") == 0 || strcmp(str, "false") == 0);
 }
 
 int is_valid_string(const char *str)
