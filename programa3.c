@@ -27,14 +27,14 @@ time_t gerar_timestamp_aleatorio(struct tm *inicial, struct tm *final)
     if (timestamp_inicial == -1)
     {
         printf("Data inválida.\n");
-        return -1;
+        exit(-1);
     }
 
     timestamp_final = mktime(final);
     if (timestamp_final == -1)
     {
         printf("Data inválida.\n");
-        return -1;
+        exit(-1);
     }
 
     time_t timestamp_aleatorio = timestamp_inicial + rand() % (timestamp_final - timestamp_inicial + 1);
