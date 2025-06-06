@@ -4,7 +4,7 @@
 #include <time.h>
 
 #define TAMANHO_MAX_LINHA 256
-#define MAX_SENSOR_ID 32
+#define MAX_SENSOR_NOME 6
 #define TAMANHO_MAX_VALOR 64
 #define NUM_SENSORS 8
 
@@ -12,14 +12,14 @@
 typedef struct
 {
     long timestamp;
-    char sensor_id[MAX_SENSOR_ID];
+    char sensor_nome[MAX_SENSOR_NOME];
     char valor[TAMANHO_MAX_VALOR];
 } Leitura;
 
 // Estrutura para armazenar dados de um sensor específico
 typedef struct
 {
-    char sensor_id[MAX_SENSOR_ID];
+    char sensor_nome[MAX_SENSOR_NOME];
     Leitura *leituras;
     int count;
     int capacity;
@@ -36,8 +36,8 @@ typedef enum
 // Lista de sensores suportados
 typedef struct
 {
-    char id[MAX_SENSOR_ID];
-    char filename[MAX_SENSOR_ID + 4]; // id + ".txt"
+    char nomeSensor[MAX_SENSOR_NOME];
+    char filename[MAX_SENSOR_NOME + 4]; // nomeSensor + ".txt"
     char description[64];
     TipoDado tipo_dado;
 } SensorType;
@@ -96,11 +96,11 @@ int validar_valor_por_tipo(const SensorType *sensor, const char *valor)
     }
 }
 
-SensorType *get_sensor_type(const char *sensor_id)
+SensorType *get_sensor_type(const char *sensor_nome)
 {
     for (int i = 0; i < NUM_SUPPORTED_SENSORS; i++)
     {
-        if (strcmp(sensor_id, supported_sensors[i].id) == 0)
+        if (strcmp(sensor_nome, supported_sensors[i].nomeSensor) == 0)
         {
             return &supported_sensors[i];
         }
@@ -160,24 +160,31 @@ int comparar_leituras(const void *a, const void *b)
 }
 
 // Função para verificar se um sensor é suportado
-int is_supported_sensor(const char *sensor_id)
+int is_supported_sensor(const char *sensor_nome, const int line)
 {
+    int sensorValido = 0;
     for (int i = 0; i < NUM_SUPPORTED_SENSORS; i++)
     {
-        if (strcmp(sensor_id, supported_sensors[i].id) == 0)
+        if (strcmp(sensor_nome, supported_sensors[i].nomeSensor) == 0)
         {
+            sensorValido = 1;
             return 1;
         }
+    }
+
+    if (!sensorValido)
+    {
+        printf("Aviso: Sensor %s não suportado na linha %d.\n\n", sensor_nome, line);
     }
     return 0;
 }
 
 // Função para obter o nome do arquivo de um sensor
-const char *get_sensor_filename(const char *sensor_id)
+const char *get_sensor_filename(const char *sensor_nome)
 {
     for (int i = 0; i < NUM_SUPPORTED_SENSORS; i++)
     {
-        if (strcmp(sensor_id, supported_sensors[i].id) == 0)
+        if (strcmp(sensor_nome, supported_sensors[i].nomeSensor) == 0)
         {
             return supported_sensors[i].filename;
         }
@@ -186,9 +193,9 @@ const char *get_sensor_filename(const char *sensor_id)
 }
 
 // Função para inicializar dados do sensor
-void init_sensor_data(SensorData *sensor, const char *sensor_id)
+void init_sensor_data(SensorData *sensor, const char *sensor_nome)
 {
-    strcpy(sensor->sensor_id, sensor_id);
+    strcpy(sensor->sensor_nome, sensor_nome);
     sensor->capacity = 1000;
     sensor->leituras = malloc(sensor->capacity * sizeof(Leitura));
     sensor->count = 0;
@@ -211,18 +218,18 @@ void add_leituras(SensorData *sensor, long timestamp, const char *valor)
 
     // Adicionar nova leitura
     sensor->leituras[sensor->count].timestamp = timestamp;
-    strcpy(sensor->leituras[sensor->count].sensor_id, sensor->sensor_id);
+    strcpy(sensor->leituras[sensor->count].sensor_nome, sensor->sensor_nome);
     strcpy(sensor->leituras[sensor->count].valor, valor);
     sensor->count++;
 }
 
 // Função para encontrar sensor na lista ou criar novo
-SensorData *find_or_create_sensor(SensorData **sensors, int *num_sensors, const char *sensor_id)
+SensorData *find_or_create_sensor(SensorData **sensors, int *num_sensors, const char *sensor_nome)
 {
     // Procurar sensor existente
     for (int i = 0; i < *num_sensors; i++)
     {
-        if (strcmp(sensors[i]->sensor_id, sensor_id) == 0)
+        if (strcmp(sensors[i]->sensor_nome, sensor_nome) == 0)
         {
             return sensors[i];
         }
@@ -230,7 +237,7 @@ SensorData *find_or_create_sensor(SensorData **sensors, int *num_sensors, const 
 
     // Criar novo sensor
     sensors[*num_sensors] = malloc(sizeof(SensorData));
-    init_sensor_data(sensors[*num_sensors], sensor_id);
+    init_sensor_data(sensors[*num_sensors], sensor_nome);
     (*num_sensors)++;
 
     return sensors[*num_sensors - 1];
@@ -239,10 +246,10 @@ SensorData *find_or_create_sensor(SensorData **sensors, int *num_sensors, const 
 // Função para salvar dados do sensor em arquivo
 void save_sensor_data(SensorData *sensor)
 {
-    const char *filename = get_sensor_filename(sensor->sensor_id);
+    const char *filename = get_sensor_filename(sensor->sensor_nome);
     if (filename == NULL)
     {
-        printf("Aviso: Sensor %s não reconhecido, pulando...\n", sensor->sensor_id);
+        printf("Aviso: Sensor %s não reconhecido, pulando...\n", sensor->sensor_nome);
         return;
     }
 
@@ -265,7 +272,7 @@ void save_sensor_data(SensorData *sensor)
     }
 
     fclose(file);
-    printf("Sensor %s: %d leituras salvas em %s\n", sensor->sensor_id, sensor->count, filename);
+    printf("Sensor %s: %d leituras salvas em %s\n", sensor->sensor_nome, sensor->count, filename);
 }
 
 // Função para liberar memória dos sensores
@@ -284,7 +291,7 @@ void print_supported_sensors()
     printf("Sensores suportados:\n");
     for (int i = 0; i < NUM_SUPPORTED_SENSORS; i++)
     {
-        printf(" %s - %s\n", supported_sensors[i].id, supported_sensors[i].description);
+        printf(" %s - %s\n", supported_sensors[i].nomeSensor, supported_sensors[i].description);
     }
     printf("\n");
 }
@@ -324,31 +331,12 @@ int main(int argc, char *argv[])
     {
         line_number++;
 
-        // Remover quebra de linha e caracteres de retorno
-        line[strcspn(line, "\r\n")] = 0;
-
-        // Remover BOM UTF-8 se presente na primeira linha
         char *line_ptr = line;
-        if (line_number == 1 && (unsigned char)line[0] == 0xEF &&
-            (unsigned char)line[1] == 0xBB && (unsigned char)line[2] == 0xBF)
-        {
-            line_ptr = line + 3;
-        }
-
-        // Pular espaços em branco no início
-        while (*line_ptr == ' ' || *line_ptr == '\t')
-        {
-            line_ptr++;
-        }
-
-        // Pular linhas vazias
-        if (strlen(line_ptr) == 0)
-            continue;
-
-        // Parsear linha: timestamp sensor_id valor
+      
+        // Parsear linha: timestamp sensor_nome valor
         long timestamp;
-        char sensor_id[MAX_SENSOR_ID];
-        char valor[TAMANHO_MAX_VALOR];
+        char sensor_nome[MAX_SENSOR_NOME - 1];
+        char valor[TAMANHO_MAX_VALOR - 1];
 
         // Verificar se há pelo menos dois espaços na linha
         int espacos = 0;
@@ -364,7 +352,7 @@ int main(int argc, char *argv[])
             continue;
         }
 
-        int parsed = sscanf(line_ptr, "%ld %s %s", &timestamp, sensor_id, valor);
+        int parsed = sscanf(line_ptr, "%ld %s %s", &timestamp, sensor_nome, valor);
 
         if (parsed != 3)
         {
@@ -384,19 +372,19 @@ int main(int argc, char *argv[])
         }
 
         // Verificar se o sensor é suportado
-        if (!is_supported_sensor(sensor_id))
+        if (!is_supported_sensor(sensor_nome, line_number))
         {
             ignored_leituras++;
             continue;
         }
 
         // Encontrar ou criar dados do sensor
-        SensorData *sensor = find_or_create_sensor(sensors, &num_sensors, sensor_id);
-        SensorType *sensor_type = get_sensor_type(sensor_id);
+        SensorData *sensor = find_or_create_sensor(sensors, &num_sensors, sensor_nome);
+        SensorType *sensor_type = get_sensor_type(sensor_nome);
 
         if (!sensor || !sensor_type || !validar_valor_por_tipo(sensor_type, valor))
         {
-            printf("Aviso: Linha %d com valor inválido para o sensor %s: '%s'\n\n", line_number, sensor_id, valor);
+            printf("Aviso: Linha %d com valor inválido para o sensor %s: '%s'\n\n", line_number, sensor_nome, valor);
             ignored_leituras++;
             continue;
         }

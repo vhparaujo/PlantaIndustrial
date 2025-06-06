@@ -7,7 +7,7 @@
 #define MAX_SENSORES 8
 #define MAX_NOME_SENSOR 6
 #define TOTAL_ESCRITAS 2000
-#define MAX_TIPO 10
+#define MAX_TIPO 64
 
 typedef struct
 {
@@ -153,6 +153,12 @@ int main(int argc, char *argv[])
         printf("Erro: Dia não pode ser maior que 28 para fevereiro em anos não bissextos.\n");
         return 1;
     }
+
+    if (anoInicial < 1970 || anoFinal < 1970) {
+        printf("Erro: Ano deve ser maior ou igual a 1970.\n");
+        return 1;
+    }
+
     struct tm t_ini = {
         .tm_year = anoInicial - 1900,
         .tm_mon = mesInicial - 1,

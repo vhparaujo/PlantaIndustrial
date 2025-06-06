@@ -4,15 +4,14 @@
 #include <time.h>
 #include <math.h>
 
-#define MAX_LINHA 100
+#define MAX_LINHA 256
 #define MAX_MEDIDAS 10000
-#define MAX_SENSOR_ID 32
-#define TAMANHO_MAX_VALOR 64
+#define MAX_TIPO 64
 
 typedef struct
 {
     time_t timestamp;
-    float valor;
+    char valor[MAX_TIPO];
 } Leitura;
 
 time_t converter_para_timestamp(int dia, int mes, int ano, int hora, int min, int seg)
@@ -132,7 +131,7 @@ int main(int argc, char *argv[])
     while (fgets(linha, sizeof(linha), arquivo))
     {
         time_t ts;
-        float valor;
+        char valor[MAX_TIPO];
 
         line_number++;
 
@@ -171,7 +170,7 @@ int main(int argc, char *argv[])
             continue;
         }
 
-        int parsed = sscanf(line_ptr, "%ld %f", &ts, &valor);
+        int parsed = sscanf(line_ptr, "%ld %s", &ts, valor);
 
         if (parsed != 2)
         {
@@ -180,7 +179,8 @@ int main(int argc, char *argv[])
         }
 
         leituras[total].timestamp = ts;
-        leituras[total].valor = valor;
+        strncpy(leituras[total].valor, valor, MAX_TIPO);
+        leituras[total].valor[MAX_TIPO - 1] = '\0'; // Garantir terminação
         total++;
     }
     fclose(arquivo);
@@ -200,7 +200,7 @@ int main(int argc, char *argv[])
 
         printf("Leitura mais próxima encontrada:\n");
         printf("  Timestamp: %ld (%s)\n", leituras[indice_proximo].timestamp, buffer);
-        printf("  Valor: %.2f\n", leituras[indice_proximo].valor);
+        printf("  Valor: %s\n", leituras[indice_proximo].valor);
     }
     else
     {
